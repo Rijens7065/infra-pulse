@@ -1,9 +1,6 @@
 name: Terraform Plan
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -15,17 +12,11 @@ permissions:
 
 jobs:
   terraform-plan:
-    name: Plan
+    name: terraform-plan
     runs-on: ubuntu-latest
 
     env:
-      TF_CLOUD_ORGANIZATION: cloudsentro
-      TF_WORKSPACE: infra-pulse
       TF_API_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
-
-    defaults:
-      run:
-        working-directory: infra
 
     steps:
       - name: Checkout
@@ -44,51 +35,53 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_CLOUD_TOKEN }}
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform -chdir=infra init
 
       - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+        run: terraform -chdir=infra fmt -check -recursive
 
       - name: Terraform Validate
-        run: terraform validate
+        run: terraform -chdir=infra validate
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false 2>&1 | tee plan_output.txt
+        run: terraform -chdir=infra plan -no-color -input=false 2>&1 | tee plan_output.txt
         continue-on-error: true
 
       - name: Post Plan as PR Comment
-        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const planOutput = fs.readFileSync('infra/plan_output.txt', 'utf8');
+            const raw = fs.readFileSync('plan_output.txt', 'utf8');
             const maxLength = 65000;
-            const truncated = planOutput.length > maxLength
-              ? planOutput.substring(0, maxLength) + '\n\n... (truncated)'
-              : planOutput;
-
-            const body = `## Terraform Plan
-
-            <details>
-            <summary>Show Plan Output</summary>
-
-            \`\`\`hcl
-            ${truncated}
-            \`\`\`
-
-            </details>
-
-            **Status:** ${{ steps.plan.outcome == 'success' && '✅ Plan succeeded' || '❌ Plan failed' }}
-            *Triggered by @${{ github.actor }} on \`${{ github.head_ref }}\`*`;
-
+            const output = raw.length > maxLength
+              ? raw.substring(0, maxLength) + '\n\n... output truncated'
+              : raw;
+            const status = '${{ steps.plan.outcome }}' === 'success'
+              ? '✅ Plan succeeded'
+              : '❌ Plan failed';
+            const body = [
+              '## Terraform Plan',
+              '',
+              `**Status:** ${status}`,
+              `*Triggered by @${{ github.actor }} on \`${{ github.head_ref }}\`*`,
+              '',
+              '<details>',
+              '<summary>Show plan output</summary>',
+              '',
+              '```',
+              output,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body
+              body,
             });
 
       - name: Fail if Plan Failed

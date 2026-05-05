@@ -18,6 +18,7 @@ jobs:
   build-push:
     name: Build and Push ML Image
     runs-on: ubuntu-latest
+    if: hashFiles('ml/Dockerfile') != ''
 
     steps:
       - name: Checkout
