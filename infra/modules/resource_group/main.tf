@@ -15,11 +15,6 @@ variable "project" {
   description = "Project name for tagging."
 }
 
-import {
-  to = azurerm_resource_group.main
-  id = "/subscriptions/2b73c588-cd58-4fc1-bb65-687bb7c3c66e/resourceGroups/rg-cloudsentro-terraform"
-}
-
 resource "azurerm_resource_group" "main" {
   name     = "rg-cloudsentro-terraform"
   location = var.location
