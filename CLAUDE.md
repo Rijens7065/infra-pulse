@@ -28,7 +28,7 @@ TF_WORKSPACE     = infra-pulse
 PUBLIC_URL       = infra-pulse.cloudsentro.com
 DOMAIN           = cloudsentro.com
 SUBDOMAIN        = infra-pulse
-AKS_VM_SIZE      = Standard_B2s (Spot)
+AKS_VM_SIZE      = Standard_B2s
 BUDGET_LIMIT     = $50 USD/month
 CLAUDE_MODEL     = claude-sonnet-4-20250514
 ```
