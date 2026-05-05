@@ -18,12 +18,4 @@ output "key_vault_uri" {
   description = "Key Vault URI for reading secrets at runtime."
 }
 
-output "ml_sp_client_id" {
-  value       = module.identity.ml_sp_client_id
-  description = "ML service principal client ID — set as workload identity annotation on ml-service-account."
-}
-
-output "agent_sp_client_id" {
-  value       = module.identity.agent_sp_client_id
-  description = "Agent service principal client ID — set as workload identity annotation on agent-service-account."
-}
+# ml_sp_client_id and agent_sp_client_id outputs deferred to Phase 2/3 with identity module

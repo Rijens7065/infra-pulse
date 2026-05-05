@@ -44,12 +44,5 @@ module "budget" {
   depends_on = [module.resource_group]
 }
 
-module "identity" {
-  source            = "./modules/identity"
-  resource_group_id = module.resource_group.id
-  aks_id            = module.aks.id
-  keyvault_id       = module.keyvault.id
-  oidc_issuer_url   = module.aks.oidc_issuer_url
-
-  depends_on = [module.aks, module.keyvault]
-}
+# identity module deferred to Phase 2/3 — requires Global Administrator
+# to grant Application.ReadWrite.All to the managed identity in Entra ID
