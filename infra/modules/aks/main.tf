@@ -27,11 +27,11 @@ resource "azurerm_kubernetes_cluster" "main" {
   dns_prefix          = "cloudsentro-demo"
 
   default_node_pool {
-    name       = "default"
-    vm_size    = "Standard_B2s"
-    node_count = 1
-    min_count  = 1
-    max_count  = 2
+    name                 = "default"
+    vm_size              = "Standard_B2s"
+    auto_scaling_enabled = true
+    min_count            = 1
+    max_count            = 2
 
     upgrade_settings {
       max_surge = "10%"
