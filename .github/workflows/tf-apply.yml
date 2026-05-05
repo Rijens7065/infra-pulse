@@ -14,33 +14,11 @@ jobs:
     name: terraform-apply
     runs-on: ubuntu-latest
 
-    env:
-      TF_API_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          cli_config_credentials_token: ${{ secrets.TF_CLOUD_TOKEN }}
-
-      - name: Terraform Init
-        run: terraform -chdir=infra init
-
-      - name: Terraform Apply
-        run: terraform -chdir=infra apply -auto-approve -input=false
-
       - name: Post Commit Comment
-        if: success()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,12 +27,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: context.sha,
-              body: [
-                '✅ **Terraform apply completed successfully**',
-                '',
-                `Commit: \`${{ github.sha }}\``,
-                `Triggered by: @${{ github.actor }}`,
-                '',
-                'View workspace: https://app.terraform.io/app/cloudsentro/workspaces/infra-pulse',
-              ].join('\n'),
+              body: '✅ Merged to main — Terraform apply triggered automatically via HCP Cloud. Monitor progress at https://app.terraform.io/app/cloudsentro/infra-pulse',
             });
