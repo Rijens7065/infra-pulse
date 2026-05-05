@@ -1,0 +1,66 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+# .terraform.lock.hcl is intentionally committed — it pins provider versions for HCP Cloud
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+.tf-schema.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env/
+env/
+dist/
+build/
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+
+# Docker
+.dockerignore
+
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# Secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# ML artifacts
+ml/model/artifacts/
+ml/data/*.parquet
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+
+# Claude Code — local session settings (machine-specific, never commit)
+.claude/settings.local.json
