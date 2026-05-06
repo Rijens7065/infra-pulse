@@ -11,6 +11,7 @@ module "acr" {
   location            = module.resource_group.location
   environment         = var.environment
   project             = var.project
+  pusher_principal_id = var.principal_id
 
   depends_on = [module.resource_group]
 }
