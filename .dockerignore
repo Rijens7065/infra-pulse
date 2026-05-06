@@ -1,0 +1,32 @@
+# Used by docker build at the repo root for ml/ and agent/ Dockerfiles.
+
+.git
+.github
+.terraform
+infra
+docs
+scripts
+tests
+dashboard
+
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+**/.mypy_cache
+
+# ML — artifacts come from the trainer stage, never from the host
+ml/model/artifacts/
+ml/data/*.parquet
+ml/data/generator_report.txt
+ml/tests
+ml/.dockerignore
+
+# secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
