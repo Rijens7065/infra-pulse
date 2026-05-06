@@ -50,11 +50,6 @@ resource "azurerm_container_registry" "main" {
 
 # Allows GitHub Actions (OIDC-authenticated as the managed identity) to
 # push container images into this registry.
-import {
-  to = azurerm_role_assignment.acr_push
-  id = "${azurerm_container_registry.main.id}/providers/Microsoft.Authorization/roleAssignments/814a2483-effd-4392-971a-6154a8a360f2"
-}
-
 resource "azurerm_role_assignment" "acr_push" {
   scope                = azurerm_container_registry.main.id
   role_definition_name = "AcrPush"
