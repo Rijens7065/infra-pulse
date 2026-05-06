@@ -9,23 +9,128 @@ permissions:
   id-token: write
   contents: write
 
+env:
+  TFC_HOST: app.terraform.io
+  TFC_ORG: cloudsentro
+  TFC_WORKSPACE: infra-pulse
+
 jobs:
-  terraform-apply:
-    name: terraform-apply
+  wait-for-apply:
+    name: Wait for HCP Cloud Apply
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    outputs:
+      run_id: ${{ steps.wait.outputs.run_id }}
+      status: ${{ steps.wait.outputs.status }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Resolve workspace ID
+        id: workspace
+        env:
+          TFC_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
+        run: |
+          set -euo pipefail
+          WS_ID=$(curl -fsSL \
+            -H "Authorization: Bearer $TFC_TOKEN" \
+            -H "Content-Type: application/vnd.api+json" \
+            "https://${TFC_HOST}/api/v2/organizations/${TFC_ORG}/workspaces/${TFC_WORKSPACE}" \
+            | jq -r '.data.id')
+          if [ -z "$WS_ID" ] || [ "$WS_ID" = "null" ]; then
+            echo "::error::Could not resolve workspace ID for ${TFC_ORG}/${TFC_WORKSPACE}"
+            exit 1
+          fi
+          echo "id=$WS_ID" >> "$GITHUB_OUTPUT"
+          echo "Workspace: $WS_ID"
 
-      - name: Post Commit Comment
+      - name: Wait for HCP Cloud run on commit ${{ github.sha }}
+        id: wait
+        env:
+          TFC_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
+          WS_ID: ${{ steps.workspace.outputs.id }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          MAX_ATTEMPTS=90
+          SLEEP_SECONDS=20
+
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            BODY=$(curl -fsSL \
+              -H "Authorization: Bearer $TFC_TOKEN" \
+              -H "Content-Type: application/vnd.api+json" \
+              "https://${TFC_HOST}/api/v2/workspaces/${WS_ID}/runs?include=configuration_version.ingress_attributes&page%5Bsize%5D=20")
+
+            # Find configuration-version IDs whose ingress-attributes match our commit SHA
+            CV_IDS=$(echo "$BODY" | jq -r --arg sha "$COMMIT_SHA" '
+              [ .included[]?
+                | select(.type == "ingress-attributes" and (.attributes."commit-sha" // "") == $sha)
+                | .id ] | unique | .[]
+            ')
+
+            if [ -n "$CV_IDS" ]; then
+              # Find the run referencing one of those configuration versions
+              CV_ARRAY=$(printf '%s\n' "$CV_IDS" | jq -R . | jq -s .)
+              MATCH=$(echo "$BODY" | jq -r --argjson cv "$CV_ARRAY" '
+                [ .data[]
+                  | select(.relationships."configuration-version".data.id as $c | $cv | index($c) != null)
+                ] | sort_by(.attributes."created-at") | reverse | .[0]
+                | if . == null then empty else "\(.id) \(.attributes.status)" end
+              ')
+
+              if [ -n "$MATCH" ]; then
+                RUN_ID=$(echo "$MATCH" | awk '{print $1}')
+                STATUS=$(echo "$MATCH" | awk '{print $2}')
+                echo "Attempt ${attempt}: run=${RUN_ID} status=${STATUS}"
+
+                case "$STATUS" in
+                  applied|planned_and_finished)
+                    echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+                    echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+                    echo "::notice::HCP Cloud apply succeeded (run=${RUN_ID})"
+                    exit 0
+                    ;;
+                  errored|canceled|discarded|force_canceled|policy_soft_failed)
+                    echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+                    echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+                    echo "::error::HCP Cloud apply failed (run=${RUN_ID} status=${STATUS})"
+                    exit 1
+                    ;;
+                esac
+              fi
+            else
+              echo "Attempt ${attempt}: no HCP Cloud run yet for commit ${COMMIT_SHA}"
+            fi
+
+            sleep $SLEEP_SECONDS
+          done
+
+          echo "::error::Timed out after $((MAX_ATTEMPTS * SLEEP_SECONDS / 60)) minutes waiting for HCP Cloud run on ${COMMIT_SHA}"
+          exit 1
+
+      - name: Post commit comment with outcome
+        if: always()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const ok = '${{ job.status }}' === 'success';
+            const runId = '${{ steps.wait.outputs.run_id }}';
+            const status = '${{ steps.wait.outputs.status }}';
+            const emoji = ok ? '✅' : '❌';
+            const verb = ok ? 'succeeded' : 'failed';
+
+            const lines = [
+              `${emoji} HCP Cloud apply ${verb}`,
+              status ? `**Status:** \`${status}\`` : null,
+              runId
+                ? `**Run:** https://app.terraform.io/app/${process.env.TFC_ORG}/${process.env.TFC_WORKSPACE}/runs/${runId}`
+                : `**Workspace:** https://app.terraform.io/app/${process.env.TFC_ORG}/${process.env.TFC_WORKSPACE}`,
+            ].filter(Boolean);
+
             github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: context.sha,
-              body: '✅ Merged to main — Terraform apply triggered automatically via HCP Cloud. Monitor progress at https://app.terraform.io/app/cloudsentro/infra-pulse',
+              body: lines.join('\n'),
             });
