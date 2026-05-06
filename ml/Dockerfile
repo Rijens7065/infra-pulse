@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
+# ── Stage 1: install Python deps into a venv ───────────────────────────────
 FROM python:3.11-slim AS builder
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -17,6 +18,23 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install -r requirements.txt
 
 
+# ── Stage 2: train the model and produce artifacts ─────────────────────────
+FROM python:3.11-slim AS trainer
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH=/app
+
+COPY --from=builder /opt/venv /opt/venv
+
+WORKDIR /app
+COPY ml /app/ml
+
+RUN python -m ml.train
+
+
+# ── Stage 3: runtime image ─────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -31,7 +49,7 @@ COPY --from=builder /opt/venv /opt/venv
 
 WORKDIR /app
 COPY ml /app/ml
-COPY ml/model/artifacts /app/ml/model/artifacts
+COPY --from=trainer /app/ml/model/artifacts /app/ml/model/artifacts
 
 RUN chown -R cloudsentro:cloudsentro /app
 
