@@ -44,6 +44,12 @@ variable "client_id" {
   description = "Azure managed identity client ID used for OIDC authentication."
 }
 
+variable "principal_id" {
+  type        = string
+  sensitive   = true
+  description = "Object ID (principal ID) of the managed identity — used for RBAC role assignments (e.g. AcrPush)."
+}
+
 variable "tenant_id" {
   type        = string
   sensitive   = true
