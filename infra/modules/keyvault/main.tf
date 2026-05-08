@@ -26,6 +26,12 @@ variable "project" {
   description = "Project name for tagging."
 }
 
+variable "secrets_writer_principal_id" {
+  type        = string
+  sensitive   = true
+  description = "Principal ID granted Key Vault Secrets Officer — needed for Terraform to write secrets (e.g. Grafana admin password)."
+}
+
 resource "random_string" "suffix" {
   length  = 4
   lower   = true
@@ -50,4 +56,13 @@ resource "azurerm_key_vault" "main" {
     environment = var.environment
     managed_by  = "terraform"
   }
+}
+
+# Allows the managed identity that runs Terraform to read/write secrets
+# in the data plane (RBAC mode is enabled, so Contributor at the control
+# plane is not enough).
+resource "azurerm_role_assignment" "secrets_officer" {
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = var.secrets_writer_principal_id
 }

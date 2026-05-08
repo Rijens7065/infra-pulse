@@ -1,0 +1,265 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Anomaly Score",
+      "id": 1,
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"expr": "cloudsentro_anomaly_score", "refId": "A", "legendFormat": "score"}
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 1,
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.5},
+              {"color": "red", "value": 0.75}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Current Failure Mode",
+      "id": 2,
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "topk(1, sum by (failure_mode) (increase(cloudsentro_predictions_total[5m])))",
+          "refId": "A",
+          "legendFormat": "{{failure_mode}}"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "name",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {"defaults": {"mappings": [], "color": {"mode": "thresholds"}}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Anomaly Score (24h)",
+      "id": 3,
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"expr": "cloudsentro_anomaly_score", "refId": "A", "legendFormat": "score"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 1,
+          "unit": "percentunit",
+          "custom": {"drawStyle": "line", "fillOpacity": 25, "lineWidth": 2}
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "AKS Pod CPU & Memory",
+      "id": 4,
+      "gridPos": {"h": 7, "w": 16, "x": 0, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"cloudsentro\"}[1m]))",
+          "refId": "A",
+          "legendFormat": "cpu / {{pod}}"
+        },
+        {
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"cloudsentro\"})",
+          "refId": "B",
+          "legendFormat": "memory / {{pod}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"drawStyle": "line", "lineWidth": 2}
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Predicted Time To Impact",
+      "id": 5,
+      "gridPos": {"h": 7, "w": 8, "x": 16, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"expr": "cloudsentro_anomaly_score", "refId": "A", "legendFormat": "score"}
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": ""},
+        "textMode": "value_and_name",
+        "colorMode": "background"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 15},
+              {"color": "red", "value": 60}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Predictions Total",
+      "id": 6,
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 13},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"expr": "sum(cloudsentro_predictions_total)", "refId": "A"}
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "colorMode": "value"
+      },
+      "fieldConfig": {"defaults": {"unit": "short"}}
+    },
+    {
+      "type": "stat",
+      "title": "Anomalous Predictions",
+      "id": 7,
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 13},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(cloudsentro_predictions_total{failure_mode!=\"NORMAL\"})",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 10}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "histogram",
+      "title": "Prediction Latency (p50 / p95)",
+      "id": 8,
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 13},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(cloudsentro_prediction_duration_seconds_bucket[5m])))",
+          "refId": "A",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(cloudsentro_prediction_duration_seconds_bucket[5m])))",
+          "refId": "B",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Hourly Cost (7d)",
+      "id": 9,
+      "gridPos": {"h": 6, "w": 16, "x": 0, "y": 19},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "cloudsentro_anomaly_score",
+          "refId": "A",
+          "legendFormat": "score (placeholder until cost exporter)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {"drawStyle": "line", "fillOpacity": 15, "lineWidth": 2}
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Budget Used",
+      "id": 10,
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 19},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"expr": "cloudsentro_anomaly_score * 100", "refId": "A"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0, "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 70},
+              {"color": "red", "value": 90}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["cloudsentro", "anomaly", "demo"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "CloudSentro — Live Anomaly View",
+  "uid": "cloudsentro-main",
+  "version": 1,
+  "weekStart": ""
+}

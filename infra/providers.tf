@@ -58,17 +58,23 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-# Kubernetes and Helm providers use AKS kubeconfig from module output.
-# Configured via data source in Phase 4 once AKS is provisioned.
-# Phase 4 will replace these blocks with:
-#   host                   = data.azurerm_kubernetes_cluster.main.kube_config[0].host
-#   client_certificate     = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].client_certificate)
-#   client_key             = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].client_key)
-#   cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].cluster_ca_certificate)
+data "azurerm_kubernetes_cluster" "main" {
+  name                = module.aks.cluster_name
+  resource_group_name = module.resource_group.name
+}
+
 provider "kubernetes" {
-  config_path = "~/.kube/config"
+  host                   = data.azurerm_kubernetes_cluster.main.kube_config[0].host
+  client_certificate     = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].client_certificate)
+  client_key             = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].client_key)
+  cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].cluster_ca_certificate)
 }
 
 provider "helm" {
-  # Configured in Phase 4 once AKS is provisioned.
+  kubernetes {
+    host                   = data.azurerm_kubernetes_cluster.main.kube_config[0].host
+    client_certificate     = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].client_certificate)
+    client_key             = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].client_key)
+    cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.main.kube_config[0].cluster_ca_certificate)
+  }
 }
