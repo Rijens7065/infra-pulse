@@ -59,45 +59,33 @@ jobs:
             BODY=$(curl -fsSL \
               -H "Authorization: Bearer $TFC_TOKEN" \
               -H "Content-Type: application/vnd.api+json" \
-              "https://${TFC_HOST}/api/v2/workspaces/${WS_ID}/runs?include=configuration_version.ingress_attributes&page%5Bsize%5D=20")
+              "https://${TFC_HOST}/api/v2/workspaces/${WS_ID}/runs?search%5Bcommit%5D=${COMMIT_SHA}&page%5Bsize%5D=5")
 
-            # Find configuration-version IDs whose ingress-attributes match our commit SHA
-            CV_IDS=$(echo "$BODY" | jq -r --arg sha "$COMMIT_SHA" '
-              [ .included[]?
-                | select(.type == "ingress-attributes" and (.attributes."commit-sha" // "") == $sha)
-                | .id ] | unique | .[]
+            MATCH=$(echo "$BODY" | jq -r '
+              [ .data[] | { id, status: .attributes.status, created: .attributes."created-at" } ]
+              | sort_by(.created) | reverse | .[0]
+              | if . == null then empty else "\(.id) \(.status)" end
             ')
 
-            if [ -n "$CV_IDS" ]; then
-              # Find the run referencing one of those configuration versions
-              CV_ARRAY=$(printf '%s\n' "$CV_IDS" | jq -R . | jq -s .)
-              MATCH=$(echo "$BODY" | jq -r --argjson cv "$CV_ARRAY" '
-                [ .data[]
-                  | select(.relationships."configuration-version".data.id as $c | $cv | index($c) != null)
-                ] | sort_by(.attributes."created-at") | reverse | .[0]
-                | if . == null then empty else "\(.id) \(.attributes.status)" end
-              ')
+            if [ -n "$MATCH" ]; then
+              RUN_ID=$(echo "$MATCH" | awk '{print $1}')
+              STATUS=$(echo "$MATCH" | awk '{print $2}')
+              echo "Attempt ${attempt}: run=${RUN_ID} status=${STATUS}"
 
-              if [ -n "$MATCH" ]; then
-                RUN_ID=$(echo "$MATCH" | awk '{print $1}')
-                STATUS=$(echo "$MATCH" | awk '{print $2}')
-                echo "Attempt ${attempt}: run=${RUN_ID} status=${STATUS}"
-
-                case "$STATUS" in
-                  applied|planned_and_finished)
-                    echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
-                    echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-                    echo "::notice::HCP Cloud apply succeeded (run=${RUN_ID})"
-                    exit 0
-                    ;;
-                  errored|canceled|discarded|force_canceled|policy_soft_failed)
-                    echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
-                    echo "status=$STATUS" >> "$GITHUB_OUTPUT"
-                    echo "::error::HCP Cloud apply failed (run=${RUN_ID} status=${STATUS})"
-                    exit 1
-                    ;;
-                esac
-              fi
+              case "$STATUS" in
+                applied|planned_and_finished)
+                  echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+                  echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+                  echo "::notice::HCP Cloud apply succeeded (run=${RUN_ID})"
+                  exit 0
+                  ;;
+                errored|canceled|discarded|force_canceled|policy_soft_failed)
+                  echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+                  echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+                  echo "::error::HCP Cloud apply failed (run=${RUN_ID} status=${STATUS})"
+                  exit 1
+                  ;;
+              esac
             else
               echo "Attempt ${attempt}: no HCP Cloud run yet for commit ${COMMIT_SHA}"
             fi
