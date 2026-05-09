@@ -66,3 +66,11 @@ resource "azurerm_role_assignment" "secrets_officer" {
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = var.secrets_writer_principal_id
 }
+
+# Azure RBAC takes 30-120s to propagate to the data plane. Without this
+# wait, the very next resource that tries to write a Key Vault secret
+# in the same apply hits 403 ForbiddenByRbac.
+resource "time_sleep" "wait_for_secrets_officer" {
+  depends_on      = [azurerm_role_assignment.secrets_officer]
+  create_duration = "150s"
+}
