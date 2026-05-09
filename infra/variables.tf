@@ -47,7 +47,13 @@ variable "client_id" {
 variable "principal_id" {
   type        = string
   sensitive   = true
-  description = "Object ID (principal ID) of the managed identity — used for RBAC role assignments (e.g. AcrPush)."
+  description = "Object ID of the GitHub Actions OIDC identity — granted AcrPush so CI can publish container images."
+}
+
+variable "terraform_runner_principal_id" {
+  type        = string
+  sensitive   = true
+  description = "Object ID of the principal HCP Cloud uses to run terraform apply — granted Key Vault Secrets Officer so apply can read/write secrets in the data plane."
 }
 
 variable "domain" {

@@ -33,7 +33,7 @@ module "keyvault" {
   tenant_id                   = var.tenant_id
   environment                 = var.environment
   project                     = var.project
-  secrets_writer_principal_id = var.principal_id
+  secrets_writer_principal_id = var.terraform_runner_principal_id
 
   depends_on = [module.resource_group]
 }
