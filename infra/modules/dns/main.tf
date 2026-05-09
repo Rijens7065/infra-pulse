@@ -35,16 +35,9 @@ resource "cloudflare_record" "www" {
   comment = "www alias for CloudSentro — managed by Terraform"
 }
 
-resource "cloudflare_page_rule" "grafana_bypass_cache" {
-  zone_id  = var.zone_id
-  target   = "${var.subdomain}.cloudsentro.com/grafana/*"
-  priority = 1
-  status   = "active"
-
-  actions {
-    cache_level = "bypass"
-  }
-}
+# Page rules removed — keeps the required Cloudflare token scope minimal
+# (Zone → DNS → Edit only). Grafana sends its own cache-control headers,
+# so a Cloudflare cache bypass for /grafana/* isn't strictly needed.
 
 output "fqdn" {
   value       = "${var.subdomain}.cloudsentro.com"
