@@ -19,3 +19,19 @@ output "key_vault_uri" {
 }
 
 # ml_sp_client_id and agent_sp_client_id outputs deferred to Phase 2/3 with identity module
+
+output "public_url" {
+  value       = module.dns.url
+  description = "Public URL of the CloudSentro dashboard."
+}
+
+output "ingress_public_ip" {
+  value       = module.ingress.public_ip
+  description = "Public IP of the NGINX ingress LoadBalancer."
+}
+
+output "grafana_admin_secret" {
+  value       = module.grafana.admin_password_secret_name
+  description = "Key Vault secret name holding the Grafana admin password."
+  sensitive   = true
+}

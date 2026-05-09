@@ -50,6 +50,18 @@ variable "principal_id" {
   description = "Object ID (principal ID) of the managed identity — used for RBAC role assignments (e.g. AcrPush)."
 }
 
+variable "domain" {
+  type        = string
+  default     = "cloudsentro.com"
+  description = "Public apex domain managed in Cloudflare."
+}
+
+variable "subdomain" {
+  type        = string
+  default     = "infra-pulse"
+  description = "Subdomain for the public dashboard (becomes <subdomain>.<domain>)."
+}
+
 variable "tenant_id" {
   type        = string
   sensitive   = true
