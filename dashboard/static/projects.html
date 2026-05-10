@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Projects · CloudSentro</title>
+<meta name="description" content="The projects CloudSentro has built and is currently building." />
+<meta name="theme-color" content="#0a0c10" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site">
+  <div class="nav">
+    <div class="brand"><a href="/">cloud<span>sentro</span></a></div>
+    <button class="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/projects.html" class="active">Projects</a>
+      <a href="/about.html">About</a>
+      <a href="https://github.com/Rijens7065/infra-pulse" rel="noopener">GitHub</a>
+      <a href="https://infra-pulse.cloudsentro.com/grafana/" rel="noopener">Dashboard</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="container">
+      <span class="tag-pill"><span class="dot"></span> 1 shipped · 0 retired</span>
+      <h1>Projects</h1>
+      <p class="lede">
+        Everything CloudSentro has built lives here. Each project is fully
+        open source — code, infrastructure, decisions, and the retrospective
+        of every bug we hit while shipping it.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reveal">
+      <div class="cards">
+
+        <a href="/projects/infra-pulse.html" class="card reveal" style="text-decoration: none; color: inherit;">
+          <span class="badge">Flagship · Live</span>
+          <h3>infra-pulse</h3>
+          <p>
+            An autonomous Azure remediation pipeline. PyTorch model detects
+            anomalies in AKS metrics. Claude agent reasons about them.
+            Real GitHub PRs ship Terraform fixes through a GitOps gate.
+          </p>
+          <dl class="specs" style="margin-top: 18px;">
+            <dt>Stack</dt>
+            <dd>AKS · Terraform + HCP Cloud · PyTorch · FastAPI · Claude · GitHub Actions OIDC</dd>
+            <dt>Status</dt>
+            <dd>Live · open source</dd>
+            <dt>Cost</dt>
+            <dd>~$37/month</dd>
+            <dt>Repository</dt>
+            <dd>github.com/Rijens7065/infra-pulse</dd>
+          </dl>
+          <div style="margin-top: 18px;">
+            <span class="btn btn-secondary" style="pointer-events: none;">Read the deep dive →</span>
+          </div>
+        </a>
+
+        <div class="card reveal" style="opacity: 0.7;">
+          <span class="badge">Roadmap</span>
+          <h3>cost-sentinel</h3>
+          <p>
+            A version of the same loop, but for Azure cost anomalies. Time
+            series of cloud spend, an agent that opens PRs to right-size
+            resources before the bill ships.
+          </p>
+          <dl class="specs" style="margin-top: 18px;">
+            <dt>Status</dt>
+            <dd>Concept · waiting room</dd>
+            <dt>ETA</dt>
+            <dd>When infra-pulse stops surprising us</dd>
+          </dl>
+        </div>
+
+        <div class="card reveal" style="opacity: 0.7;">
+          <span class="badge">Roadmap</span>
+          <h3>cve-watch</h3>
+          <p>
+            A vulnerability-driven version of the same loop. CVE feeds for
+            images and provider modules; the agent opens PRs to pin the fix.
+            Trivy is the upstream signal; Claude is the reasoning.
+          </p>
+          <dl class="specs" style="margin-top: 18px;">
+            <dt>Status</dt>
+            <dd>Concept</dd>
+          </dl>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div>
+    <a href="/">Home</a> ·
+    <a href="/projects.html">Projects</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="https://github.com/Rijens7065/infra-pulse" rel="noopener">GitHub</a>
+  </div>
+  <div class="copy">
+    © 2026 CloudSentro · Built by <a href="/about.html">Rijens Nadoda</a>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>

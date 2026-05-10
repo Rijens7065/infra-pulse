@@ -8,7 +8,13 @@
 [![Claude AI](https://img.shields.io/badge/Claude-claude--sonnet--4--20250514-FF6B35)](https://anthropic.com)
 [![License](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
 
-**Live demo:** https://infra-pulse.cloudsentro.com
+**Live demo:** https://infra-pulse.cloudsentro.com/grafana/
+**Company site:** https://cloudsentro.com
+
+> **New here?** Start with the [**handbook**](docs/handbook.md) — the
+> as-built, end-to-end guide. Or jump to the [project
+> retrospective](docs/issues-encountered.md) if you want the war stories
+> first.
 
 ---
 

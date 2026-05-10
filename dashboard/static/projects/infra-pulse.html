@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>infra-pulse · CloudSentro</title>
+<meta name="description" content="Deep dive on infra-pulse: an autonomous remediation system for Azure Kubernetes Service. PyTorch model + Claude agent + GitOps gate." />
+<meta name="theme-color" content="#0a0c10" />
+<link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+<header class="site">
+  <div class="nav">
+    <div class="brand"><a href="/">cloud<span>sentro</span></a></div>
+    <button class="nav-toggle" aria-expanded="false" aria-label="Menu">☰</button>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/projects.html" class="active">Projects</a>
+      <a href="/about.html">About</a>
+      <a href="https://github.com/Rijens7065/infra-pulse" rel="noopener">GitHub</a>
+      <a href="https://infra-pulse.cloudsentro.com/grafana/" rel="noopener">Dashboard</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="container">
+      <div class="crumb">
+        <a href="/projects.html">Projects</a><span class="sep">/</span>infra-pulse
+      </div>
+      <span class="tag-pill"><span class="dot"></span> Live · 2 agent-opened PRs already</span>
+      <h1><em>infra-pulse</em></h1>
+      <p class="lede">
+        An autonomous remediation system for Azure Kubernetes Service. A PyTorch
+        anomaly model watches metrics, a Claude agent reasons about every flag,
+        and the system opens real GitHub pull requests with Terraform fixes
+        through a zero-secret GitOps pipeline.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://infra-pulse.cloudsentro.com/grafana/" rel="noopener">Open live dashboard →</a>
+        <a class="btn btn-secondary" href="https://github.com/Rijens7065/infra-pulse" rel="noopener">View source</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reveal">
+      <div class="stats">
+        <div class="stat reveal">
+          <div class="num" data-count="99.23" data-decimals="2" data-suffix="%">0%</div>
+          <div class="label">Model test accuracy</div>
+        </div>
+        <div class="stat reveal">
+          <div class="num" data-count="6">0</div>
+          <div class="label">Failure modes classified</div>
+        </div>
+        <div class="stat reveal">
+          <div class="num" data-count="7">0</div>
+          <div class="label">Agent tools</div>
+        </div>
+        <div class="stat reveal">
+          <div class="num" data-count="52" data-suffix="">0</div>
+          <div class="label">Tests · all green</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reveal">
+      <div class="eyebrow">Architecture</div>
+      <h2 class="section-title">The three layers</h2>
+      <p class="section-sub">
+        Each layer does one thing well, and the contract between them is small
+        and typed. The ML pod emits an <code>AnomalySignal</code>; the agent
+        emits a <code>RemediationPlan</code>; humans emit "merge" or "close."
+      </p>
+
+      <div class="cards">
+        <div class="card reveal">
+          <span class="badge">Layer 1 · Detect</span>
+          <h3>ML pod</h3>
+          <p>
+            PyTorch LSTM autoencoder reconstructs a 60-minute × 7-channel
+            window. Per-channel reconstruction error fed to a two-stage
+            classifier (IsolationForest gate + RandomForest).
+          </p>
+          <p style="margin-top: 12px;">
+            <strong>Output:</strong> <code>{score, mode, confidence, explanation}</code><br />
+            <strong>Latency:</strong> &lt;200ms inference<br />
+            <strong>Accuracy:</strong> 99.23% on held-out 15% split
+          </p>
+        </div>
+
+        <div class="card reveal">
+          <span class="badge">Layer 2 · Reason</span>
+          <h3>Claude agent</h3>
+          <p>
+            Polls every 300s. If signal warrants it, runs a tool-use loop with
+            Claude — up to 10 turns. Reads recent infra commits, lists
+            Kubernetes events, reads the relevant Terraform file before
+            proposing changes.
+          </p>
+          <p style="margin-top: 12px;">
+            <strong>Model:</strong> <code>claude-sonnet-4-20250514</code><br />
+            <strong>Tools:</strong> 7 typed tools<br />
+            <strong>Output:</strong> <code>RemediationPlan</code> + GitHub PR
+          </p>
+        </div>
+
+        <div class="card reveal">
+          <span class="badge">Layer 3 · Ship</span>
+          <h3>GitOps gate</h3>
+          <p>
+            Every change reaches infrastructure as a real GitHub PR with five
+            mandatory sections. A human approves. HCP Cloud applies. GitHub
+            Actions polls HCP Cloud's API and reflects the apply outcome on
+            the commit status.
+          </p>
+          <p style="margin-top: 12px;">
+            <strong>Approval:</strong> manual, always<br />
+            <strong>Apply:</strong> HCP Cloud, OIDC-authenticated<br />
+            <strong>Status:</strong> truthful — green only when apply succeeded
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--bg-elevated); border-block: 1px solid var(--border);">
+    <div class="container reveal">
+      <div class="eyebrow">Sample run</div>
+      <h2 class="section-title">What the demo looks like</h2>
+      <p class="section-sub">
+        Output from <code>scripts/demo.sh</code>. The agent's reasoning loop
+        catches the injected anomaly and opens a real PR within ~5 minutes.
+      </p>
+
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="dot red"></div>
+          <div class="dot yellow"></div>
+          <div class="dot green"></div>
+          <div class="title">scripts/demo.sh</div>
+        </div>
+        <div class="terminal-body" data-terminal></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reveal">
+      <div class="eyebrow">Deep dive</div>
+      <h2 class="section-title">Pick a thread</h2>
+
+      <div data-tabs>
+        <div class="tabs">
+          <button class="tab active" data-tab="security">Security</button>
+          <button class="tab" data-tab="ml">ML model</button>
+          <button class="tab" data-tab="agent">Agent</button>
+          <button class="tab" data-tab="cost">Cost</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="security">
+          <h3>Zero static credentials, anywhere</h3>
+          <p>
+            GitHub Actions authenticates to Azure via OIDC federated credentials,
+            assuming a managed identity scoped to AcrPush. HCP Cloud
+            authenticates to Azure via a <em>different</em> OIDC chain — a separate
+            app registration with broader Terraform-applier scope. The two
+            identities are never confused (that was a real bug we hit and
+            fixed by splitting the variable).
+          </p>
+          <p>
+            The only static secrets in the entire system live in Azure Key
+            Vault: the Anthropic API key, the GitHub App private key, and the
+            auto-generated Grafana admin password. Pods read them at runtime
+            via DefaultAzureCredential.
+          </p>
+          <p>
+            Every pod runs as non-root, with a read-only root filesystem,
+            <code>capabilities.drop: ["ALL"]</code>, and the RuntimeDefault
+            seccomp profile.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="ml">
+          <h3>What the model actually learns</h3>
+          <p>
+            We train an LSTM autoencoder on synthetic 30-day, 7-channel AKS
+            metrics. The encoder squeezes a 60-minute window down to a
+            32-dimensional latent vector; the decoder reconstructs the
+            window. Reconstruction error on the last 10 timesteps is the
+            anomaly score.
+          </p>
+          <p>
+            Then a two-stage classifier sits on top: IsolationForest as a
+            binary anomalous-or-not gate, then RandomForest to label the six
+            failure modes — NORMAL, OOM_LEAK, CPU_THROTTLE,
+            NETWORK_DEGRADATION, COST_SPIKE, SECURITY_DRIFT.
+          </p>
+          <p>
+            Test accuracy on the held-out 15% split: <strong>99.23%</strong>.
+            CPU inference: under 200ms on Standard_D2s_v3.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="agent">
+          <h3>Why an agent on top of the model</h3>
+          <p>
+            The model is a good classifier but a terrible diagnostician.
+            "OOM_LEAK at 0.95 confidence" tells you a class — it doesn't tell
+            you which Terraform file to change, whether someone shipped a
+            related fix in the last hour, or what the right rollback path
+            looks like.
+          </p>
+          <p>
+            Claude runs a tool-use loop, bounded to 10 turns, with seven
+            typed tools:
+            <code>get_current_anomaly_signal</code>,
+            <code>get_azure_monitor_metrics</code>,
+            <code>get_recent_infra_changes</code>,
+            <code>get_kubernetes_events</code>,
+            <code>read_terraform_file</code>,
+            <code>create_remediation_pr</code>, and
+            <code>log_audit_event</code>.
+          </p>
+          <p>
+            The system prompt enforces six hard rules. The tool code enforces
+            the same rules, with unit tests, in case the prompt drifts. Belt,
+            suspenders.
+          </p>
+        </div>
+
+        <div class="tab-panel" data-panel="cost">
+          <h3>How $37 a month is achievable</h3>
+          <p>
+            Single-node AKS cluster on Standard_D2s_v3 (~$70 on-demand,
+            cheaper if scaled to zero overnight). Basic ACR (~$5). Free AKS
+            control plane. Cloudflare DNS + TLS (free). Azure Blob audit log
+            (cents). HCP Cloud free tier. Claude API at roughly 500 agent
+            calls/month (~$6).
+          </p>
+          <p>
+            A hard $50/month Azure budget alert sits at 70% warn and 90%
+            critical. The agent has an explicit hard rule that it cannot
+            propose changes to the budget module — preventing a feedback
+            loop where the agent helpfully raises its own ceiling.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reveal">
+      <div class="eyebrow">Reference</div>
+      <h2 class="section-title">Specs</h2>
+
+      <dl class="specs">
+        <dt>Repository</dt>
+        <dd><a href="https://github.com/Rijens7065/infra-pulse" rel="noopener">github.com/Rijens7065/infra-pulse</a></dd>
+        <dt>Cluster</dt>
+        <dd>AKS · canadaeast · 1× Standard_D2s_v3</dd>
+        <dt>Container registry</dt>
+        <dd>ACR Basic · 2 images (ml, agent)</dd>
+        <dt>State management</dt>
+        <dd>HCP Cloud Terraform · auto-apply on merge</dd>
+        <dt>Dashboard</dt>
+        <dd><a href="https://infra-pulse.cloudsentro.com/grafana/" rel="noopener">infra-pulse.cloudsentro.com/grafana/</a> (anonymous Viewer)</dd>
+        <dt>Test coverage</dt>
+        <dd>17 ML tests · 35 agent tests · 5 E2E pipeline tests</dd>
+        <dt>Image scanning</dt>
+        <dd>Trivy CRITICAL+HIGH gate on every build</dd>
+        <dt>Domain</dt>
+        <dd>cloudsentro.com via Cloudflare</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reveal">
+      <div class="eyebrow">Reading list</div>
+      <h2 class="section-title">From the docs</h2>
+      <p class="section-sub">
+        Everything that was built, decided, and learned along the way is in
+        the repo. Pick a thread:
+      </p>
+
+      <div class="cards">
+        <a href="https://github.com/Rijens7065/infra-pulse/blob/main/docs/handbook.md" class="card reveal" style="text-decoration: none; color: inherit;" rel="noopener">
+          <h3>Handbook</h3>
+          <p>The complete operator's manual — what each component does, how they collaborate, the security model, and how to run the demo.</p>
+        </a>
+        <a href="https://github.com/Rijens7065/infra-pulse/blob/main/docs/architecture.md" class="card reveal" style="text-decoration: none; color: inherit;" rel="noopener">
+          <h3>Architecture</h3>
+          <p>System diagram, component cost table, data flow under load, and the full ML/agent pipeline broken down.</p>
+        </a>
+        <a href="https://github.com/Rijens7065/infra-pulse/blob/main/docs/decisions.md" class="card reveal" style="text-decoration: none; color: inherit;" rel="noopener">
+          <h3>Decisions</h3>
+          <p>Every non-obvious choice and why. OIDC over secrets. CPU PyTorch over GPU. Sidecar-only Grafana loading. Pinned datasource UIDs.</p>
+        </a>
+        <a href="https://github.com/Rijens7065/infra-pulse/blob/main/docs/issues-encountered.md" class="card reveal" style="text-decoration: none; color: inherit;" rel="noopener">
+          <h3>Issues encountered</h3>
+          <p>Retrospective of every bug we hit during the build. From azurerm 4.x API drift to bash f-string escapes to AKS LB DSR mode.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div>
+    <a href="/">Home</a> ·
+    <a href="/projects.html">Projects</a> ·
+    <a href="/about.html">About</a> ·
+    <a href="https://github.com/Rijens7065/infra-pulse" rel="noopener">GitHub</a>
+  </div>
+  <div class="copy">
+    © 2026 CloudSentro · Built by <a href="/about.html">Rijens Nadoda</a>
+  </div>
+</footer>
+
+<script>
+window.__terminalScript = [
+  { html: "<span class='prompt'>$</span> bash scripts/demo.sh", delay: 700 },
+  { html: "", delay: 200 },
+  { html: "<span class='ok'>==</span> 1/5  Verifying public dashboard <span class='ok'>==</span>", delay: 600 },
+  { html: "<span class='ok'>✓</span> Grafana reachable at https://infra-pulse.cloudsentro.com/grafana/  (200)", delay: 700 },
+  { html: "", delay: 200 },
+  { html: "<span class='ok'>==</span> 2/5  Injecting OOM_LEAK (intensity=high, duration=10m) <span class='ok'>==</span>", delay: 700 },
+  { html: "<span class='dim'>injecting OOM_LEAK via cloudsentro/ml-service:8000</span>", delay: 600 },
+  { html: "<span class='key'>{</span>", delay: 200 },
+  { html: "  <span class='key'>\"status\":</span> <span class='ok'>\"injected\"</span>,", delay: 150 },
+  { html: "  <span class='key'>\"failure_mode\":</span> <span class='ok'>\"OOM_LEAK\"</span>,", delay: 150 },
+  { html: "  <span class='key'>\"expires_at\":</span> 1778433645.7", delay: 150 },
+  { html: "<span class='key'>}</span>", delay: 700 },
+  { html: "", delay: 200 },
+  { html: "<span class='ok'>==</span> 3/5  Watching ML model — looking for anomaly_score > 0.70 <span class='ok'>==</span>", delay: 700 },
+  { html: "  t+ 1s  score=<span class='ok'>0.950</span>  mode=<span class='ok'>OOM_LEAK</span>  <span class='ok'>✓ DETECTED</span>", delay: 700 },
+  { html: "", delay: 200 },
+  { html: "<span class='ok'>==</span> 4/5  Watching GitHub for an agent-remediation PR <span class='ok'>==</span>", delay: 700 },
+  { html: "  t+ 0s  no PR yet…", delay: 500 },
+  { html: "  t+15s  no PR yet…", delay: 500 },
+  { html: "  t+155s  <span class='ok'>✓ https://github.com/Rijens7065/infra-pulse/pull/17</span>", delay: 700 },
+  { html: "", delay: 200 },
+  { html: "<span class='ok'>==</span> 5/5  Summary <span class='ok'>==</span>", delay: 600 },
+  { html: "  anomaly mode                  OOM_LEAK", delay: 100 },
+  { html: "  injection → detection         <span class='ok'>1s</span>", delay: 100 },
+  { html: "  injection → PR opened         <span class='ok'>156s</span>", delay: 100 },
+  { html: "  PR URL                        github.com/.../pull/17", delay: 600 },
+  { html: "<span class='ok'>✓</span> demo complete — open the dashboard and the PR side-by-side<span class='cursor'></span>", delay: 0 }
+];
+</script>
+<script src="../script.js" defer></script>
+</body>
+</html>
