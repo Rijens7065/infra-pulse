@@ -31,7 +31,7 @@ resource "azurerm_kubernetes_cluster" "main" {
     vm_size              = "Standard_D2s_v3"
     auto_scaling_enabled = true
     min_count            = 1
-    max_count            = 2
+    max_count            = 3
 
     upgrade_settings {
       max_surge = "10%"
