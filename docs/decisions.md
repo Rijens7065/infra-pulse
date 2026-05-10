@@ -31,5 +31,11 @@ Cloudflare provides free automatic TLS, DDoS protection, and hides the AKS publi
 ### Grafana: anonymous read-only access
 This is a public prototype demo. Anonymous Viewer access lets clients see the dashboard without logging in. Admin access requires the password stored in Key Vault.
 
+### Grafana dashboards: sidecar-only loading (no filesystem provider)
+Two parallel mechanisms can load dashboards into Grafana — a filesystem provider that watches a directory, and a sidecar that watches Kubernetes ConfigMaps and uploads via the HTTP API. Running both creates duplicate folders: the provider creates an empty named folder, the sidecar uploads to the General folder. We use **only** the sidecar with `defaultFolderName: "CloudSentro"`, eliminating the duplication.
+
+### Grafana datasource: pinned UID = `prometheus`
+Grafana auto-generates a random UID for each provisioned datasource unless one is explicitly set. Dashboard JSON files reference datasources by UID (`"datasource": {"type": "prometheus", "uid": "prometheus"}`). To make dashboards portable across deployments — and to let the sidecar-uploaded JSON resolve the datasource without manual intervention — the datasource is provisioned with the explicit UID `prometheus`, matching what the dashboard JSON expects.
+
 ### Budget: $50/month hard limit
 Azure Budget alert at 70% ($35 warn) and 90% ($45 critical). Spot nodes, Basic ACR, free AKS control plane, and CPU-only ML keep costs under $40/mo normally.
