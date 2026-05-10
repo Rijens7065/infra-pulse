@@ -14,7 +14,7 @@ RUN apt-get update \
 WORKDIR /build
 COPY ml/requirements.txt ./requirements.txt
 RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install --upgrade pip setuptools wheel \
     && /opt/venv/bin/pip install -r requirements.txt
 
 
