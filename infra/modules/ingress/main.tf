@@ -32,6 +32,22 @@ resource "helm_release" "nginx" {
     value = "LoadBalancer"
   }
 
+  # Local externalTrafficPolicy avoids an AKS quirk where the cloud-controller
+  # creates an LB rule with backendPort=80 + enableFloatingIp=null, which makes
+  # the LB DNAT to a port nothing on the node listens on. With "Local" the LB
+  # uses Direct Server Return (enableFloatingIp=true) and traffic flows.
+  set {
+    name  = "controller.service.externalTrafficPolicy"
+    value = "Local"
+  }
+
+  # Force TCP health probe instead of HTTP GET / (which the controller
+  # answers with 404 by default — failing the probe and dropping the backend).
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-health-probe-protocol"
+    value = "tcp"
+  }
+
   # Cloudflare proxy compatibility — preserve real client IP through CF.
   set {
     name  = "controller.config.use-forwarded-headers"

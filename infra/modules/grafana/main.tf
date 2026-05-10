@@ -180,20 +180,20 @@ resource "kubernetes_ingress_v1" "grafana" {
   metadata {
     name      = "grafana"
     namespace = var.namespace
-    annotations = {
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
-      "nginx.ingress.kubernetes.io/use-regex"      = "true"
-    }
   }
 
+  # No rewrite annotation — Grafana is configured with serve_from_sub_path=true
+  # and root_url=https://.../grafana, so it expects to receive requests at
+  # /grafana/... directly. Stripping the prefix with a rewrite annotation
+  # creates an infinite redirect loop (Grafana redirects / → /grafana → /).
   spec {
     ingress_class_name = var.ingress_class_name
     rule {
       host = var.public_hostname
       http {
         path {
-          path      = "/grafana(/|$)(.*)"
-          path_type = "ImplementationSpecific"
+          path      = "/grafana"
+          path_type = "Prefix"
           backend {
             service {
               name = "grafana"
