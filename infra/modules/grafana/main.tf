@@ -133,6 +133,7 @@ resource "helm_release" "grafana" {
           {
             name      = "Prometheus"
             type      = "prometheus"
+            uid       = "prometheus"
             url       = var.prometheus_url
             access    = "proxy"
             isDefault = true
