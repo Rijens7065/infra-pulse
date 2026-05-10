@@ -1,0 +1,16 @@
+# Cloudflare Workers (with Static Assets) deploy config for cloudsentro.com.
+#
+# The Cloudflare unified Workers Builds flow runs `npx wrangler deploy` from
+# the repo root. Without this file Wrangler can't find the static site
+# because the HTML lives under dashboard/static/, not at the root.
+#
+# The [assets] block tells Wrangler "serve this directory as a static site
+# under a Workers binding" — no actual Worker code, just static files.
+
+name = "cloudsentro"
+compatibility_date = "2026-05-10"
+
+[assets]
+directory = "./dashboard/static"
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"
