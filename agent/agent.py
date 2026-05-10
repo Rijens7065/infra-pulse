@@ -254,6 +254,21 @@ def _build_context(claude_api_key: str, github_pem: str) -> ToolContext:
 
 
 def _load_secrets() -> tuple[str, str]:
+    """Load Anthropic API key and GitHub App PEM.
+
+    Source order:
+      1. Environment variables (`ANTHROPIC_API_KEY`, `GITHUB_APP_PRIVATE_KEY`)
+         — easy path for demo / local dev when workload identity isn't
+         configured. The deployment can mount these from a K8s secret.
+      2. Azure Key Vault — production path, requires the pod to authenticate
+         via workload identity to a principal with KV Secrets User.
+    """
+    env_key = os.environ.get("ANTHROPIC_API_KEY")
+    env_pem = os.environ.get("GITHUB_APP_PRIVATE_KEY")
+    if env_key and env_pem:
+        logger.info("loading secrets from environment variables")
+        return env_key, env_pem
+
     from azure.identity import DefaultAzureCredential
     from azure.keyvault.secrets import SecretClient
 
