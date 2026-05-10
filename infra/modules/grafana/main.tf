@@ -155,7 +155,7 @@ resource "helm_release" "grafana" {
         folder            = "/tmp/dashboards"
         defaultFolderName = "CloudSentro"
         provider = {
-          allowUiUpdates = false
+          allowUiUpdates            = false
           foldersFromFilesStructure = false
         }
       }
