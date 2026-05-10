@@ -1,1 +1,5 @@
-/grafana/*  https://infra-pulse.cloudsentro.com/grafana/:splat  301
+# Cloudflare Pages routing rules.
+# /grafana/* on the demo subdomain redirects to the AKS-hosted Grafana.
+# Bare paths are handled by Cloudflare Pages' default 404 page.
+
+/grafana/*  https://infra-pulse.cloudsentro.com/grafana/:splat  302

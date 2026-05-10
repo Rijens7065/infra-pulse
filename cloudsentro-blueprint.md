@@ -9,14 +9,20 @@
 
 ```
 PROJECT          = cloudsentro
+REPO_NAME        = infra-pulse
 DOMAIN           = cloudsentro.com
-PUBLIC_URL       = demo.cloudsentro.com
-AZURE_REGION     = westeurope
-AKS_VM_SIZE      = Standard_B2s (Spot)
+PUBLIC_URL       = infra-pulse.cloudsentro.com
+AZURE_REGION     = canadaeast
+RESOURCE_GROUP   = rg-cloudsentro-terraform
+AKS_VM_SIZE      = Standard_D2s_v3   # Standard_B2s family not allowed in canadaeast for our subscription
 BUDGET_LIMIT     = $50/month
 TF_ORG           = cloudsentro
-TF_WORKSPACE     = cloudsentro-prod
+TF_WORKSPACE     = infra-pulse
 ```
+
+> The blueprint below was the original spec. For the **as-built** view see
+> [docs/handbook.md](docs/handbook.md). For what changed during the build,
+> see [docs/issues-encountered.md](docs/issues-encountered.md).
 
 ---
 
