@@ -64,3 +64,10 @@ ehthumbs.db
 
 # Claude Code — local session settings (machine-specific, never commit)
 .claude/settings.local.json
+
+# Generated Word/PDF exports of the markdown docs — regenerate locally
+# with `pandoc docs/<file>.md -o docs/<file>.docx --toc` if you need them.
+docs/*.docx
+docs/*.pdf
+*.docx
+*.pdf
