@@ -1,0 +1,13 @@
+# Vulnerabilities in the base python:3.11-slim image's pre-installed
+# setuptools and pip — vendored deps under /usr/local/lib/.../setuptools/_vendor.
+# These tools are not used at runtime: our application code runs out of a
+# separate venv at /opt/venv that has up-to-date setuptools and wheel.
+# Tracked: bump base image when python:3.11-slim ships fresher tooling.
+CVE-2026-23949   # jaraco.context 5.3.0 — vendored in base setuptools
+CVE-2026-24049   # wheel 0.45.1 — vendored in base setuptools
+
+# starlette HIGH CVE — pinned transitively by fastapi 0.115.x. Fix is in
+# starlette 0.49.1, which needs a fastapi major version bump (0.118+).
+# Deferred: low-impact DoS via Range header on a service that is not
+# exposed to untrusted external traffic.
+CVE-2025-62727

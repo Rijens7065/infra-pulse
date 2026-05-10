@@ -56,6 +56,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
+          trivyignores: ./.trivyignore
 
       - name: Push Docker Image
         run: |

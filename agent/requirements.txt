@@ -9,7 +9,7 @@ azure-storage-blob==12.24.0
 azure-monitor-query==1.4.0
 kubernetes==31.0.0
 PyGithub==2.5.0
-PyJWT==2.10.1
+PyJWT==2.12.1
 cryptography==46.0.5
 prometheus-client==0.21.1
 urllib3==2.6.3
