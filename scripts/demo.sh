@@ -95,7 +95,7 @@ for attempt in $(seq 1 30); do
     -H "Content-Type: application/json" \
     -d "$(python3 -c 'import json; print(json.dumps({"metrics": [[40,2.5e8,0,100,2.5e6,2e6,0.12]]*60}))')" \
     || echo "{}")
-  SCORE=$(echo "$PAYLOAD" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(f"{d.get(\"anomaly_score\",0):.3f}")' 2>/dev/null || echo "0.000")
+  SCORE=$(echo "$PAYLOAD" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("%.3f" % d.get("anomaly_score", 0))' 2>/dev/null || echo "0.000")
   MODE_OBSERVED=$(echo "$PAYLOAD" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("failure_mode","?"))' 2>/dev/null || echo "?")
   ELAPSED=$(( $(date +%s) - DETECT_T0 ))
 
