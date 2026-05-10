@@ -18,6 +18,8 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import FastAPI
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from agent.constants import (
     CLAUDE_MODEL,
@@ -310,6 +312,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="cloudsentro-agent", version="0.1.0", lifespan=lifespan)
+
+
+@app.get("/metrics")
+async def metrics() -> Response:
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/health")

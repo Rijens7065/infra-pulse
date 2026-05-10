@@ -195,7 +195,15 @@ class ToolContext:
 
 
 def run_get_current_anomaly_signal(ctx: ToolContext, _args: Dict[str, Any]) -> Dict[str, Any]:
-    response = ctx.http_client.get(f"{ctx.ml_service_url}/predict", timeout=10.0)
+    # ML's /predict is a POST endpoint that scores a 60x7 metrics window.
+    # In the deployed demo we don't yet have Azure Monitor wiring, so we
+    # send a baseline window and let the ML pod's /inject override (if
+    # active) shape the response.
+    baseline_sample = [40.0, 2.5e8, 0.0, 100.0, 2.5e6, 2.0e6, 0.12]
+    body = {"metrics": [baseline_sample] * 60}
+    response = ctx.http_client.post(
+        f"{ctx.ml_service_url}/predict", json=body, timeout=10.0
+    )
     response.raise_for_status()
     return response.json()
 
