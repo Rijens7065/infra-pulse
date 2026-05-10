@@ -140,29 +140,23 @@ resource "helm_release" "grafana" {
         ]
       }
     }
+    # Dashboards are loaded exclusively via the sidecar — it watches
+    # ConfigMaps with label grafana_dashboard=1 and uploads them via
+    # Grafana's HTTP API. defaultFolderName puts every imported dashboard
+    # into the "CloudSentro" folder so we don't end up with two folders
+    # (one from the provider config, one from the API import).
     sidecar = {
       dashboards = {
-        enabled         = true
-        searchNamespace = var.namespace
-        label           = "grafana_dashboard"
-        labelValue      = "1"
-        folder          = "/var/lib/grafana/dashboards/cloudsentro"
-      }
-    }
-    dashboardProviders = {
-      "dashboardproviders.yaml" = {
-        apiVersion = 1
-        providers = [{
-          name            = "cloudsentro"
-          orgId           = 1
-          folder          = "CloudSentro"
-          type            = "file"
-          disableDeletion = false
-          editable        = true
-          options = {
-            path = "/var/lib/grafana/dashboards/cloudsentro"
-          }
-        }]
+        enabled           = true
+        searchNamespace   = var.namespace
+        label             = "grafana_dashboard"
+        labelValue        = "1"
+        folder            = "/tmp/dashboards"
+        defaultFolderName = "CloudSentro"
+        provider = {
+          allowUiUpdates = false
+          foldersFromFilesStructure = false
+        }
       }
     }
   })]
